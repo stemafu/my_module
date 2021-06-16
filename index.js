@@ -69,14 +69,62 @@ app.get('/hello/worlds', function(request, response) {
 app.get('/greeting:name', function(request, response) {
     console.log(`Hello ${request.params.name}`);
     response.send('hello there and hello there indeed!');
-   });
+});
 
+app.get("/viewAllHats", function(request, response){
+
+    pool.query(`select * from hats`, (err, result) => {
+
+
+        if(err){
+            console.log(err.stack);
+        }
+        console.log(result.rows.length);
+
+        console.log(result.rows[2])
+        //let pg know we're done with this client
+        //done();
+        //close the pg pool entirely.
+        //this is done so our node process will exit.
+       // pool.end();
+    });
+
+    response.send("View Data done");
+});
+
+
+app.get("/viewHat:id", function(request, response){
+
+    let id = request.params.id;
+    console.log("Let us see the Id " + id);
+    values = [id];
+    
+    // pool.query(`select * from hats where id = ${id}`, (err, result) => {
+    pool.query(`select * from hats where id = $1}`, values, (err, result) => {
+        if(err){
+            console.log(err.stack);
+        }
+        console.log(result.rows);
+        //console.log(result.rows[2])
+        //let pg know we're done with this client
+    }); 
+    response.send("View by ID");
+});
 
 app.post('/submit-data', function(request, response){
     console.log("Processing some information");
-    console.log(request.body.firstname);
-    console.log(request.body.lastname);
-    console.log(request.body.email);
+
+    let firstname = request.body.firstname;
+    let lastname = request.body.lastname;
+    let email = request.body.email;
+    let height = 10;
+    let brim = true;
+    
+    console.log(firstname);
+    console.log(lastname);
+    console.log(email);
+
+    
 
     /*In order for us to handle HTTP POST request with our express app, 
     we need to install a middleware module called body parser.
@@ -88,11 +136,20 @@ app.post('/submit-data', function(request, response){
     */
 
     let text = 'INSERT INTO hats (name, material, height, brim) VALUES ($1, $2, $3, $4) RETURNING *';
-    const values = [request.body.firstname , request.body.lastname , '9' , 'true' ];
+    const values = [firstname , lastname , height , brim ];
 
-    pool.query()// so that we can continue from here tomorrow.
+    
+    pool.query(text,values, (err, result) =>{
 
+        if(err){
+            console.log(err.stack);
+        }
 
+        console.log(result.rows);
+
+    } );
+
+   //pool.end();
     response.send("Post request");
 });
 
@@ -113,6 +170,6 @@ app.delete('/delete-data', function(request, response){
 
 
 //have the application listen on a specific port
-app.listen(5000, function () {
+app.listen(3000, function () {
  console.log('Example app listening on port 3000!');
 });
